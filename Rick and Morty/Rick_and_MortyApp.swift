@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct Rick_and_MortyApp: App {
+    @StateObject var networkManager = NetworkManager()
     var body: some Scene {
         WindowGroup {
-                CharacterView()
+            ContentView()
+                .environmentObject(networkManager)
         }
     }
 }

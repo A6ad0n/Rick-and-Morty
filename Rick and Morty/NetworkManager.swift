@@ -6,12 +6,39 @@
 //
 
 import Foundation
+import Network
 
 class NetworkManager: ObservableObject {
     @Published var characters: [Character] = []
     @Published var episodes: [Episode] = []
     private var currentPage = 1
+    private var monitor: NWPathMonitor?
+    private var queue = DispatchQueue.global(qos: .background)
     var isLoading = false
+    var isConnected = true
+    
+    init() {
+        startMonitoring()
+    }
+    
+    deinit {
+        stopMonitoring()
+    }
+    
+    func startMonitoring() {
+        monitor = NWPathMonitor()
+        monitor?.pathUpdateHandler = { path in
+            DispatchQueue.main.async {
+                self.isConnected = path.status == .satisfied
+            }
+        }
+        monitor?.start(queue: queue)
+    }
+    
+    func stopMonitoring() {
+        monitor?.cancel()
+        monitor = nil
+    }
     
     func fetchCharacters() {
         guard !isLoading else { return }

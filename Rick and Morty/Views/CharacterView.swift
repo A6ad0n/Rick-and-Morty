@@ -9,11 +9,10 @@ import SwiftUI
 
 
 struct CharacterView: View {
-    @StateObject var networkManager = NetworkManager()
+    @EnvironmentObject var networkManager: NetworkManager
     var body: some View {
         NavigationView {
-            List
-            {
+            List {
                 ForEach(networkManager.characters) { character in
                     CharacterRow(character: character)
                         .onAppear {
@@ -98,4 +97,5 @@ func statusColor(for status: String) -> Color {
 
 #Preview {
     CharacterView()
+        .environmentObject(NetworkManager())
 }
