@@ -9,8 +9,52 @@ import Foundation
 
 class NetworkManager: ObservableObject {
     @Published var characters: [Character] = []
-    func fetchCharacters(from i: Int) {
-        guard let url = URL(string: "https://rickandmortyapi.com/api/character?page=\(i)")
+    @Published var episodes: [Episode] = []
+    private var currentPage = 1
+    var isLoading = false
+    
+    func fetchCharacters() {
+        guard !isLoading else { return }
+        isLoading = true
+        
+        guard let url = URL(string: "https://rickandmortyapi.com/api/character?page=\(currentPage)")
+        else {
+            print("Invalid URL")
+            return
+        }
+        
+        let request = URLRequest(url: url)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error fetching characters: \(error.localizedDescription)")
+                DispatchQueue.main.async { self.isLoading = false }
+                return
+            }
+            guard let data = data
+            else {
+                print("No data receieved")
+                DispatchQueue.main.async { self.isLoading = false }
+                return
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(CharacterResponse.self, from: data)
+                DispatchQueue.main.async {
+                    self.characters.append(contentsOf: result.results)
+                    self.currentPage += 1
+                    self.isLoading = false
+                    print("Characters fetched successfully: \(self.characters.count) characters")
+                }
+            } catch {
+                print ("Error decoding JSON: \(error.localizedDescription)")
+                DispatchQueue.main.async { self.isLoading = false }
+            }
+        }.resume()
+    }
+    
+    func fetchEpisodes(episodeURL: String) {
+        guard let url = URL(string: episodeURL)
         else {
             print("Invalid URL")
             return
@@ -30,14 +74,16 @@ class NetworkManager: ObservableObject {
             }
             
             do {
-                let result = try JSONDecoder().decode(CharacterResponse.self, from: data)
+                let result = try JSONDecoder().decode(EpisodeResponse.self, from: data)
                 DispatchQueue.main.async {
-                    self.characters.append(contentsOf: result.results)
-                    print("Characters fetched successfully: \(self.characters.count) characters")
+                    self.episodes = result.results
+                    print("Episodes fetched successfully: \(self.characters.count) characters")
                 }
             } catch {
                 print ("Error decoding JSON: \(error.localizedDescription)")
+                //WHY THERE'RE ERRORS?!?!?? IDK
+                print (error)
             }
         }.resume()
-}
+    }
 }

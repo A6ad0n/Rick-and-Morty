@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CharacterDetailView: View {
+    @StateObject var networkManager = NetworkManager()
     let character: Character
     var body: some View {
         ScrollView {
@@ -51,6 +52,11 @@ struct CharacterDetailView: View {
             .frame(width: 330, height: 550)
             .padding()
             .background(RoundedRectangle(cornerRadius: 12.5).fill(.black.opacity(0.1)))
+        }
+        .onAppear {
+            for episode in character.episode {
+                networkManager.fetchEpisodes(episodeURL: episode)
+            }
         }
         .navigationTitle(character.name)
     }
